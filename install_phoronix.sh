@@ -4,7 +4,7 @@
 ########################################
 VVRS='10.8.4'
 VPTS='phoronix-test-suite'
-FDEB="$VPTS_${VVRS}_all.deb"
+FDEB="${VPTS}_${VVRS}_all.deb"
 VREP="https://github.com/$VPTS/$VPTS"
 VURL="$VREP/releases/download/v$VVRS/$FDEB"
 
@@ -17,7 +17,7 @@ DESCRIPTION:
   This script installs $VPTS
 
   Default version: $VVRS
-  See: $VURL
+  See: $VREP
 
 OPTIONS:
   -h, --help  Displays this help text.
@@ -51,14 +51,14 @@ esac
 # Check: help
 if [[ $HELP == 'true' ]] ;then f_hlp ;fi
 
-# Already installed?
-if [[ `$VPTS version` ]] ;then f_errr "$VPTS already installed" ;fi
-
 # Check: root privilege execution
 if [[ `whoami` != 'root' ]] ;then f_errr 'use "sudo" for execution' ;fi
 
 # Check: run flag
 if [[ $RUN != 'true' ]] ;then exit ;fi
+
+# Already installed?
+if [[ `$VPTS version` ]] ;then f_errr "$VPTS already installed" ;fi
 
 # Processing
 ########################################
