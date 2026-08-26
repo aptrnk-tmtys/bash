@@ -64,8 +64,10 @@ if [[ `$VPTS version` ]] ;then f_errr "$VPTS already installed" ;fi
 ########################################
 clear
 
-# place .deb file
+# change directory
 cd /usr/local/src/
+
+# place .deb file
 curl -LO $VURL
 
 # install phoronix
