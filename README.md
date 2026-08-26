@@ -1,2 +1,2 @@
 # bash
-Bash scripts
+Bash scripting
