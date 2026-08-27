@@ -57,6 +57,9 @@ if [[ `whoami` != 'root' ]] ;then f_errr 'use "sudo" for execution' ;fi
 # Check: run flag
 if [[ $RUN != 'true' ]] ;then exit ;fi
 
+# Check: curl 
+if [[ ! `which curl` ]] ;then f_errr "curl not found" ;fi
+
 # Already installed?
 if [[ `$VPTS version` ]] ;then f_errr "$VPTS already installed" ;fi
 
