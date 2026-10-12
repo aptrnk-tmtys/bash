@@ -56,7 +56,7 @@ elif [[ ! "$VVRS" =~ ^[0-9]+$ ]] ;then
 	f_errr "Version is not a number: $VVRS" ;fi
 
 # Check: root privilege execution
-#if [[ `whoami` != 'root' ]] ;then f_errr 'use "sudo" for execution' ;fi
+if [[ `whoami` != 'root' ]] ;then f_errr 'use "sudo" for execution' ;fi
 
 # Check: run flag
 if [[ $RUN != 'true' ]] ;then exit ;fi
