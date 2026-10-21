@@ -8,8 +8,9 @@ usage() {
     cat <<USAGE
 Usage: ${0##*/} [-g PATTERN] [-h]
 
-Parse $CONFIG, list every ssh command it implies (sorted and
-numbered), then prompt for a number and run the matching command.
+Parse $CONFIG, list every Host alias it defines (sorted, numbered and
+split on "__" into columns), then prompt for a number and run the matching
+ssh command.
 
 Options:
   -g, --grep PATTERN   Only list commands matching PATTERN (case-insensitive,
@@ -43,7 +44,7 @@ if [ ! -r "$CONFIG" ]; then
     exit 1
 fi
 
-# One line per Host alias: "<display command>\t<arg1>\x1f<arg2>\x1f..."
+# One line per Host alias: "<alias>\t<display command>\t<arg1>\x1f<arg2>\x1f..."
 parse() {
     awk '
     function flush(   i, args, disp) {
@@ -56,7 +57,7 @@ parse() {
             if (host != "") { tgt = (user != "" ? user "@" : "") host }
             else            { tgt = aliases[i] }
             args = args tgt; disp = disp " " tgt
-            printf "%s\t%s\n", disp, args
+            printf "%s\t%s\t%s\n", aliases[i], disp, args
         }
         n = 0; host = user = port = key = hka = ident = ""
     }
@@ -92,9 +93,11 @@ if [ -z "$LIST" ]; then
     exit 1
 fi
 
+ALIASES=()
 DISPLAY_LINES=()
 ARGLINES=()
-while IFS=$'\t' read -r disp args; do
+while IFS=$'\t' read -r alias disp args; do
+    ALIASES+=("$alias")
     DISPLAY_LINES+=("$disp")
     ARGLINES+=("$args")
 done <<EOT
@@ -102,11 +105,12 @@ $LIST
 EOT
 
 total=${#DISPLAY_LINES[@]}
+# Numbered Host aliases (sorted), split on "__" into aligned columns.
 i=0
 while [ "$i" -lt "$total" ]; do
-    printf '%4d) %s\n' "$((i + 1))" "${DISPLAY_LINES[$i]}"
+    printf '%d)\t%s\n' "$((i + 1))" "${ALIASES[$i]//__/$'\t'}"
     i=$((i + 1))
-done
+done | column -t -s $'\t'
 
 while :; do
     printf 'Enter number [1-%d] (q to quit): ' "$total"
