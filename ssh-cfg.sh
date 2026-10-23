@@ -2,19 +2,25 @@
 # ssh-cfg.sh - list the ssh commands implied by ~/.ssh/config and run one.
 
 CONFIG="${SSH_CONFIG:-$HOME/.ssh/config}"
-PATTERN=""
+FILTER=""
+GREP=""
+EDIT=0
 
 usage() {
     cat <<USAGE
-Usage: ${0##*/} [-g PATTERN] [-h]
+Usage: ${0##*/} [-f PATTERN] [-g TEXT] [-e] [-h]
 
 Parse $CONFIG, list every Host alias it defines (sorted, numbered and
 split on "__" into columns), then prompt for a number and run the matching
 ssh command.
 
 Options:
-  -g, --grep PATTERN   Only list commands matching PATTERN (case-insensitive,
-                       grep basic regex). Also accepts --grep=PATTERN.
+  -f, --filter PATTERN Only list commands matching PATTERN (case-insensitive,
+                       grep basic regex). Also accepts --filter=PATTERN.
+  -g, --grep TEXT      Just grep $CONFIG for TEXT (case-insensitive) and
+                       exit. Also accepts --grep=TEXT.
+  -e, --edit           Edit $CONFIG with the default terminal editor
+                       (\$VISUAL, then \$EDITOR, then vi) and exit.
   -h, --help           Show this help and exit.
 
 Environment:
@@ -31,13 +37,23 @@ USAGE
 while [ $# -gt 0 ]; do
     case "$1" in
         -h|--help) usage; exit 0 ;;
-        -g|--grep)
+        -f|--filter)
             if [ $# -lt 2 ]; then echo "error: $1 requires a pattern" >&2; usage >&2; exit 2; fi
-            PATTERN="$2"; shift 2 ;;
-        --grep=*) PATTERN="${1#--grep=}"; shift ;;
+            FILTER="$2"; shift 2 ;;
+        --filter=*) FILTER="${1#--filter=}"; shift ;;
+        -g|--grep)
+            if [ $# -lt 2 ]; then echo "error: $1 requires text" >&2; usage >&2; exit 2; fi
+            GREP="$2"; shift 2 ;;
+        --grep=*) GREP="${1#--grep=}"; shift ;;
+        -e|--edit) EDIT=1; shift ;;
         *) echo "error: unknown option: $1" >&2; usage >&2; exit 2 ;;
     esac
 done
+
+if [ "$EDIT" -eq 1 ]; then
+    # shellcheck disable=SC2086  # editor may carry arguments, e.g. "code -w"
+    exec ${VISUAL:-${EDITOR:-vi}} "$CONFIG"
+fi
 
 if [ ! -r "$CONFIG" ]; then
     echo "error: cannot read $CONFIG" >&2
@@ -83,9 +99,13 @@ parse() {
     ' "$CONFIG"
 }
 
+if [ -n "$GREP" ]; then
+    exec grep -i -- "$GREP" "$CONFIG"
+fi
+
 LIST=$(parse | LC_ALL=C sort -u)
-if [ -n "$PATTERN" ]; then
-    LIST=$(printf '%s\n' "$LIST" | grep -i -- "$PATTERN")
+if [ -n "$FILTER" ]; then
+    LIST=$(printf '%s\n' "$LIST" | grep -i -- "$FILTER")
 fi
 
 if [ -z "$LIST" ]; then
