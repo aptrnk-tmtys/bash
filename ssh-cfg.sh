@@ -132,7 +132,11 @@ i=0
 while [ "$i" -lt "$total" ]; do
     printf '%d)\t%s\n' "$((i + 1))" "${ALIASES[$i]//__/$'\t'}"
     i=$((i + 1))
-done | column -t -s $'\t'
+done | {
+    cat
+    # Column labels, aligned with the rows above by passing through column.
+    printf '<#>\t<USER>\t<HOST>\t<NOTE>\n'
+} | column -t -s $'\t'
 
 while :; do
     printf 'Enter number [1-%d] (q to quit): ' "$total"
